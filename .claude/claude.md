@@ -8,12 +8,13 @@
 2. [核心技术栈](#核心技术栈)
 3. [数据库配置](#数据库配置)
 4. [UI 组件系统](#ui-组件系统)
-5. [状态管理](#状态管理)
-6. [认证系统](#认证系统)
-7. [支付集成](#支付集成)
-8. [邮件服务](#邮件服务)
-9. [开发规范](#开发规范)
-10. [常见任务](#常见任务)
+5. [tRPC API](#trpc-api)
+6. [状态管理](#状态管理)
+7. [认证系统](#认证系统)
+8. [支付集成](#支付集成)
+9. [邮件服务](#邮件服务)
+10. [开发规范](#开发规范)
+11. [常见任务](#常见任务)
 
 ---
 
@@ -224,6 +225,383 @@ import { User, Mail, Lock } from "lucide-react"
 <Mail size={16} />
 <Lock />
 ```
+
+---
+
+## tRPC API
+
+### 什么是 tRPC？
+
+tRPC 是一个端到端类型安全的 API 框架，允许你在 TypeScript 项目中构建完全类型安全的 API，无需代码生成或额外的构建步骤。
+
+**核心优势**:
+- **端到端类型安全** - 从服务端到客户端自动类型推断
+- **零代码生成** - 不需要 GraphQL Schema 或 OpenAPI 规范
+- **IDE 自动补全** - 完整的 TypeScript 支持
+- **集成 React Query** - 自动缓存、重新验证等功能
+- **Zod 验证** - 运行时类型检查和验证
+
+### 文件结构
+
+```
+lib/
+├── server/
+│   ├── trpc.ts              # tRPC 初始化配置
+│   └── routers/
+│       ├── _app.ts          # 主路由器（合并所有子路由）
+│       ├── user.ts          # 用户路由器
+│       └── post.ts          # 文章路由器
+├── trpc-client.ts           # 客户端配置
+app/
+├── api/trpc/[trpc]/
+│   └── route.ts             # Next.js API 处理器
+└── providers/
+    └── trpc-provider.tsx    # React Provider
+```
+
+### 服务端配置
+
+**1. 初始化 tRPC (`lib/server/trpc.ts`)**:
+```typescript
+import { initTRPC } from '@trpc/server';
+import superjson from 'superjson';
+
+const t = initTRPC.create({
+  transformer: superjson, // 支持 Date, Map, Set 等类型
+});
+
+export const router = t.router;
+export const publicProcedure = t.procedure;
+```
+
+**2. 创建路由器 (`lib/server/routers/user.ts`)**:
+```typescript
+import { z } from 'zod';
+import { router, publicProcedure } from '../trpc';
+import { prisma } from '@/app/lib/prisma';
+
+export const userRouter = router({
+  // 查询（Query）- 用于获取数据
+  getAll: publicProcedure.query(async () => {
+    return await prisma.user.findMany({
+      include: { posts: true },
+    });
+  }),
+
+  // 带输入验证的查询
+  getById: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      return await prisma.user.findUnique({
+        where: { id: input.id },
+      });
+    }),
+
+  // 修改操作（Mutation）- 用于创建、更新、删除
+  create: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email('无效的邮箱格式'),
+        name: z.string().min(1, '姓名不能为空').optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return await prisma.user.create({
+        data: input,
+      });
+    }),
+
+  // 更新
+  update: publicProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        email: z.string().email().optional(),
+        name: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...data } = input;
+      return await prisma.user.update({
+        where: { id },
+        data,
+      });
+    }),
+
+  // 删除
+  delete: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      await prisma.user.delete({
+        where: { id: input.id },
+      });
+      return { success: true };
+    }),
+});
+```
+
+**3. 合并路由器 (`lib/server/routers/_app.ts`)**:
+```typescript
+import { router } from '../trpc';
+import { userRouter } from './user';
+import { postRouter } from './post';
+
+export const appRouter = router({
+  user: userRouter,
+  post: postRouter,
+});
+
+// 导出类型定义
+export type AppRouter = typeof appRouter;
+```
+
+**4. Next.js API 处理器 (`app/api/trpc/[trpc]/route.ts`)**:
+```typescript
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+import { appRouter } from '@/lib/server/routers/_app';
+
+const handler = (req: Request) =>
+  fetchRequestHandler({
+    endpoint: '/api/trpc',
+    req,
+    router: appRouter,
+    createContext: () => ({}),
+  });
+
+export { handler as GET, handler as POST };
+```
+
+### 客户端配置
+
+**1. 创建客户端 (`lib/trpc-client.ts`)**:
+```typescript
+import { createTRPCReact } from '@trpc/react-query';
+import type { AppRouter } from './server/routers/_app';
+
+export const trpc = createTRPCReact<AppRouter>();
+```
+
+**2. Provider 配置 (`app/providers/trpc-provider.tsx`)**:
+```typescript
+'use client'
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { httpBatchLink } from '@trpc/client';
+import { useState } from 'react';
+import superjson from 'superjson';
+import { trpc } from '@/lib/trpc-client';
+
+export function TRPCProvider({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
+  const [trpcClient] = useState(() =>
+    trpc.createClient({
+      links: [
+        httpBatchLink({
+          url: '/api/trpc',
+          transformer: superjson,
+        }),
+      ],
+    })
+  );
+
+  return (
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    </trpc.Provider>
+  );
+}
+```
+
+### 客户端使用
+
+**在客户端组件中使用**:
+```tsx
+'use client'
+
+import { trpc } from '@/lib/trpc-client';
+
+export default function UsersPage() {
+  // 查询数据
+  const { data: users, isLoading, error } = trpc.user.getAll.useQuery();
+
+  // 获取单个用户
+  const { data: user } = trpc.user.getById.useQuery(
+    { id: 1 },
+    { enabled: false } // 可选：控制查询时机
+  );
+
+  // 获取 utils 用于手动操作
+  const utils = trpc.useContext();
+
+  // 创建 mutation
+  const createUser = trpc.user.create.useMutation({
+    onSuccess: () => {
+      // 刷新用户列表
+      utils.user.getAll.invalidate();
+    },
+    onError: (error) => {
+      console.error('创建失败:', error);
+    },
+  });
+
+  // 更新 mutation
+  const updateUser = trpc.user.update.useMutation({
+    onSuccess: (data) => {
+      // 乐观更新：立即更新 UI
+      utils.user.getAll.setData(undefined, (old) => {
+        return old?.map(u => u.id === data.id ? data : u);
+      });
+    },
+  });
+
+  // 删除 mutation
+  const deleteUser = trpc.user.delete.useMutation({
+    onSuccess: (_, variables) => {
+      utils.user.getAll.setData(undefined, (old) => {
+        return old?.filter(u => u.id !== variables.id);
+      });
+    },
+  });
+
+  const handleCreate = () => {
+    createUser.mutate({
+      email: 'user@example.com',
+      name: 'John Doe',
+    });
+  };
+
+  const handleUpdate = (id: number) => {
+    updateUser.mutate({
+      id,
+      name: 'Updated Name',
+    });
+  };
+
+  const handleDelete = (id: number) => {
+    deleteUser.mutate({ id });
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return (
+    <div>
+      <button onClick={handleCreate} disabled={createUser.isPending}>
+        {createUser.isPending ? 'Creating...' : 'Create User'}
+      </button>
+
+      {users?.map((user) => (
+        <div key={user.id}>
+          <span>{user.name} ({user.email})</span>
+          <button onClick={() => handleUpdate(user.id)}>Update</button>
+          <button onClick={() => handleDelete(user.id)}>Delete</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### 最佳实践
+
+**1. 输入验证**:
+```typescript
+// 使用 Zod 进行详细验证
+.input(
+  z.object({
+    email: z.string().email('无效的邮箱'),
+    password: z.string().min(8, '密码至少 8 个字符'),
+    age: z.number().min(0).max(150).optional(),
+  })
+)
+```
+
+**2. 错误处理**:
+```typescript
+import { TRPCError } from '@trpc/server';
+
+.mutation(async ({ input }) => {
+  const existing = await prisma.user.findUnique({
+    where: { email: input.email },
+  });
+
+  if (existing) {
+    throw new TRPCError({
+      code: 'CONFLICT',
+      message: '邮箱已存在',
+    });
+  }
+
+  return await prisma.user.create({ data: input });
+})
+```
+
+**3. 分页**:
+```typescript
+getAll: publicProcedure
+  .input(
+    z.object({
+      limit: z.number().min(1).max(100).default(10),
+      cursor: z.number().optional(),
+    })
+  )
+  .query(async ({ input }) => {
+    const users = await prisma.user.findMany({
+      take: input.limit + 1,
+      cursor: input.cursor ? { id: input.cursor } : undefined,
+    });
+
+    let nextCursor: number | undefined = undefined;
+    if (users.length > input.limit) {
+      const nextItem = users.pop();
+      nextCursor = nextItem!.id;
+    }
+
+    return {
+      users,
+      nextCursor,
+    };
+  }),
+```
+
+**4. 客户端无限滚动**:
+```tsx
+const { data, fetchNextPage, hasNextPage } =
+  trpc.user.getAll.useInfiniteQuery(
+    { limit: 10 },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    }
+  );
+```
+
+### tRPC vs REST API
+
+| 特性 | tRPC | REST API |
+|------|------|----------|
+| 类型安全 | ✅ 自动 | ❌ 需手动定义 |
+| 代码生成 | ❌ 不需要 | ⚠️ 可能需要 |
+| 学习曲线 | 📉 低 | 📊 中等 |
+| API 文档 | ✅ 自动（从类型） | ⚠️ 需手动编写 |
+| 性能 | ✅ 批量请求 | ⚠️ 单个请求 |
+| 公开 API | ❌ 不推荐 | ✅ 推荐 |
+| 移动端 | ❌ 需 TypeScript | ✅ 通用 |
+
+### 何时使用 tRPC？
+
+**适合使用 tRPC**:
+- 全栈 TypeScript 项目
+- 前后端在同一个代码库
+- 不需要公开 API
+- 团队熟悉 TypeScript
+
+**不适合使用 tRPC**:
+- 需要公开 API 给第三方
+- 前后端语言不同
+- 需要支持非 TypeScript 客户端
+- 简单的 CRUD 应用（REST 可能更简单）
 
 ---
 

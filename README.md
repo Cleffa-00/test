@@ -21,9 +21,11 @@
 - **PostgreSQL (Neon)** - 现代化的 Serverless PostgreSQL 数据库
 - **Prisma 6.19.0** - 现代化的 ORM，提供类型安全的数据库操作
 
-### 状态管理和数据获取
+### API 和数据获取
+- **tRPC 11** - 端到端类型安全的 API，无需代码生成
 - **TanStack Query (React Query)** - 强大的数据同步和缓存库
 - **React Query DevTools** - 开发时的调试工具
+- **Zod** - TypeScript-first 的模式验证库
 
 ### 认证和授权
 - **Better Auth** - 现代化的认证解决方案，支持多种登录方式
@@ -36,9 +38,11 @@
 
 ## 功能特点
 
+- ✅ **tRPC** - 端到端类型安全的 API，无需手动编写 API 路由
 - ✅ 完整的用户管理系统（CRUD 操作）
 - ✅ TanStack Query 数据管理和缓存
 - ✅ shadcn/ui 组件库集成
+- ✅ Zod 模式验证
 - ✅ Better Auth 认证系统（已配置，待启用）
 - ✅ Stripe 支付集成（已配置，待启用）
 - ✅ Resend 邮件服务（已配置，待启用）
@@ -123,11 +127,13 @@ pnpm start
 ```
 .
 ├── app/
-│   ├── api/                    # API 路由
-│   │   ├── users/              # 用户 API
-│   │   └── posts/              # 文章 API
-│   ├── providers/              # React Context Providers
-│   │   └── query-provider.tsx # TanStack Query Provider
+│   ├── api/
+│   │   ├── trpc/[trpc]/        # tRPC API 端点
+│   │   ├── users/              # REST API (可选)
+│   │   └── posts/              # REST API (可选)
+│   ├── providers/
+│   │   ├── trpc-provider.tsx   # tRPC Provider (包含 React Query)
+│   │   └── query-provider.tsx  # TanStack Query Provider (已弃用)
 │   ├── users/                  # 用户管理页面
 │   ├── globals.css             # 全局样式 (shadcn/ui)
 │   ├── layout.tsx              # 根布局
@@ -135,6 +141,13 @@ pnpm start
 ├── components/
 │   └── ui/                     # shadcn/ui 组件 (按需添加)
 ├── lib/
+│   ├── server/
+│   │   ├── trpc.ts             # tRPC 服务端配置
+│   │   └── routers/
+│   │       ├── _app.ts         # 主路由器
+│   │       ├── user.ts         # 用户路由器
+│   │       └── post.ts         # 文章路由器
+│   ├── trpc-client.ts          # tRPC 客户端配置
 │   ├── auth.ts                 # Better Auth 配置
 │   ├── stripe.ts               # Stripe 配置
 │   ├── resend.ts               # Resend 邮件配置
@@ -168,6 +181,94 @@ pnpm dlx shadcn@latest add button card dialog form input
 ```
 
 组件会自动添加到 `components/ui` 目录。
+
+## 使用 tRPC
+
+本项目使用 tRPC 提供端到端类型安全的 API。
+
+### 服务端（创建 API）
+
+```typescript
+// lib/server/routers/user.ts
+import { z } from 'zod';
+import { router, publicProcedure } from '../trpc';
+import { prisma } from '@/app/lib/prisma';
+
+export const userRouter = router({
+  // 查询
+  getAll: publicProcedure.query(async () => {
+    return await prisma.user.findMany();
+  }),
+
+  // 带参数的查询
+  getById: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      return await prisma.user.findUnique({
+        where: { id: input.id },
+      });
+    }),
+
+  // 修改操作
+  create: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        name: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return await prisma.user.create({
+        data: input,
+      });
+    }),
+});
+```
+
+### 客户端（调用 API）
+
+```tsx
+'use client'
+
+import { trpc } from '@/lib/trpc-client';
+
+export default function UsersPage() {
+  // 查询数据（自动缓存、重新验证）
+  const { data: users, isLoading } = trpc.user.getAll.useQuery();
+
+  // 修改数据
+  const createUser = trpc.user.create.useMutation({
+    onSuccess: () => {
+      // 刷新用户列表
+      utils.user.getAll.invalidate();
+    },
+  });
+
+  const handleCreate = () => {
+    createUser.mutate({
+      email: 'user@example.com',
+      name: 'John Doe',
+    });
+  };
+
+  return (
+    <div>
+      {isLoading ? <p>Loading...</p> : (
+        users?.map(user => <div key={user.id}>{user.name}</div>)
+      )}
+      <button onClick={handleCreate}>Create User</button>
+    </div>
+  );
+}
+```
+
+### tRPC 的优势
+
+1. **端到端类型安全** - 从服务端到客户端自动类型推断
+2. **无需代码生成** - 不需要运行额外的构建步骤
+3. **自动补全** - IDE 中完整的 TypeScript 支持
+4. **集成 React Query** - 自动缓存、重新验证等功能
+5. **Zod 验证** - 运行时类型检查和验证
 
 ## API 接口
 

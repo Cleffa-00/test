@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { QueryProvider } from "./providers/query-provider";
+import { TRPCProvider } from "./providers/trpc-provider";
 
 export const metadata: Metadata = {
   title: "现代全栈应用",
@@ -15,9 +15,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="antialiased">
-        <QueryProvider>
+        <TRPCProvider>
           {children}
-        </QueryProvider>
+        </TRPCProvider>
       </body>
     </html>
   );
