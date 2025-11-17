@@ -1,36 +1,23 @@
 import { z } from 'zod';
 import { router, publicProcedure } from '../trpc';
-import { prisma } from '@/app/lib/prisma';
 
 /**
- * 文章路由器
+ * 文章路由器 - 使用模拟数据（前端演示）
  * 处理所有与文章相关的 tRPC 过程
  */
 export const postRouter = router({
   // 获取所有文章
   getAll: publicProcedure.query(async () => {
-    const posts = await prisma.post.findMany({
-      include: {
-        author: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-    return posts;
+    // 返回空数组，因为这是前端演示项目
+    return [];
   }),
 
   // 根据 ID 获取文章
   getById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
-      const post = await prisma.post.findUnique({
-        where: { id: input.id },
-        include: {
-          author: true,
-        },
-      });
-      return post;
+      // 返回 null，因为这是前端演示项目
+      return null;
     }),
 
   // 创建文章
@@ -44,13 +31,16 @@ export const postRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const post = await prisma.post.create({
-        data: input,
-        include: {
-          author: true,
-        },
-      });
-      return post;
+      // 模拟返回创建的文章
+      return {
+        id: Date.now(),
+        title: input.title,
+        content: input.content || null,
+        published: input.published,
+        authorId: input.authorId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
     }),
 
   // 更新文章
@@ -64,24 +54,23 @@ export const postRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const { id, ...data } = input;
-      const post = await prisma.post.update({
-        where: { id },
-        data,
-        include: {
-          author: true,
-        },
-      });
-      return post;
+      // 模拟返回更新的文章
+      return {
+        id: input.id,
+        title: input.title || 'Untitled',
+        content: input.content || null,
+        published: input.published || false,
+        authorId: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
     }),
 
   // 删除文章
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
-      await prisma.post.delete({
-        where: { id: input.id },
-      });
+      // 模拟删除成功
       return { success: true };
     }),
 });
