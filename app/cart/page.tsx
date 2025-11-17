@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Minus, Plus, Trash2, ArrowLeft } from 'lucide-react'
+import { Minus, Plus, Trash2, ArrowLeft, Sparkles } from 'lucide-react'
 import { useCart } from '@/app/contexts/cart-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 
 export default function CartPage() {
@@ -22,7 +22,6 @@ export default function CartPage() {
       return
     }
 
-    // 模拟下单
     const order = {
       id: `ORD${Date.now()}`,
       items,
@@ -36,35 +35,29 @@ export default function CartPage() {
     }
 
     console.log('创建订单:', order)
-
-    // 清空购物车
     clearCart()
-
-    // 跳转到订单确认页面
     router.push(`/orders/${order.id}`)
   }
 
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="border-b">
-          <div className="container mx-auto px-4 py-4">
+        <header className="glass border-b border-border/40">
+          <div className="max-w-6xl mx-auto px-6 py-4">
             <Link href="/menu">
-              <Button variant="ghost">
-                <ArrowLeft className="h-5 w-5 mr-2" />
+              <Button variant="ghost" className="rounded-full">
+                <ArrowLeft className="h-4 w-4 mr-2" />
                 返回菜单
               </Button>
             </Link>
           </div>
         </header>
-        <main className="container mx-auto px-4 py-12">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">购物车是空的</h2>
-            <p className="text-muted-foreground mb-8">快去看看有什么好吃的吧！</p>
-            <Link href="/menu">
-              <Button>浏览菜单</Button>
-            </Link>
-          </div>
+        <main className="max-w-4xl mx-auto px-6 py-20 text-center">
+          <h2 className="text-3xl font-semibold mb-4">购物车是空的</h2>
+          <p className="text-muted-foreground mb-8">快去看看有什么好吃的吧</p>
+          <Link href="/menu">
+            <Button className="rounded-full px-8">浏览菜单</Button>
+          </Link>
         </main>
       </div>
     )
@@ -72,33 +65,36 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
+      <header className="glass border-b border-border/40">
+        <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/menu">
-              <Button variant="ghost">
-                <ArrowLeft className="h-5 w-5 mr-2" />
+              <Button variant="ghost" className="rounded-full">
+                <ArrowLeft className="h-4 w-4 mr-2" />
                 返回菜单
               </Button>
             </Link>
-            <h1 className="text-2xl font-bold">购物车</h1>
-            <Button variant="ghost" onClick={clearCart}>
-              <Trash2 className="h-5 w-5 mr-2" />
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" strokeWidth={1.5} />
+              <h1 className="text-lg font-medium">购物车</h1>
+            </div>
+            <Button variant="ghost" onClick={clearCart} className="rounded-full">
+              <Trash2 className="h-4 w-4 mr-2" />
               清空
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 pb-32">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 购物车商品列表 */}
+      <main className="max-w-6xl mx-auto px-6 py-8 pb-32">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
-              <Card key={item.dish.id}>
-                <CardContent className="p-4">
+              <Card key={item.dish.id} className="rounded-3xl soft-shadow border-border/50">
+                <CardContent className="p-6">
                   <div className="flex gap-4">
-                    <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-24 h-24 bg-muted rounded-2xl overflow-hidden flex-shrink-0">
                       <img
                         src={item.dish.image}
                         alt={item.dish.name}
@@ -106,25 +102,27 @@ export default function CartPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between mb-2">
                         <div>
                           <h3 className="font-semibold">{item.dish.name}</h3>
                           <p className="text-sm text-muted-foreground">{item.dish.description}</p>
-                          <p className="text-primary font-semibold mt-1">¥{item.dish.price}</p>
+                          <p className="font-semibold mt-1">¥{item.dish.price}</p>
                         </div>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => removeItem(item.dish.id)}
+                          className="rounded-full"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                      <div className="flex items-center gap-2 mt-3">
+                      <div className="flex items-center gap-3 mt-3">
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => updateQuantity(item.dish.id, item.quantity - 1)}
+                          className="rounded-full"
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -133,6 +131,7 @@ export default function CartPage() {
                           variant="outline"
                           size="icon"
                           onClick={() => updateQuantity(item.dish.id, item.quantity + 1)}
+                          className="rounded-full"
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -140,11 +139,6 @@ export default function CartPage() {
                           ¥{(item.dish.price * item.quantity).toFixed(2)}
                         </span>
                       </div>
-                      {item.notes && (
-                        <p className="text-sm text-muted-foreground mt-2">
-                          备注: {item.notes}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -152,53 +146,53 @@ export default function CartPage() {
             ))}
           </div>
 
-          {/* 结算信息 */}
+          {/* Checkout Form */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-4">
+            <Card className="sticky top-24 rounded-3xl soft-shadow border-border/50">
               <CardHeader>
                 <CardTitle>订单信息</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium">顾客姓名 *</label>
+                  <label className="text-sm font-medium mb-2 block">顾客姓名 *</label>
                   <Input
                     placeholder="请输入您的姓名"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="mt-1"
+                    className="rounded-full"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">桌号（选填）</label>
+                  <label className="text-sm font-medium mb-2 block">桌号（选填）</label>
                   <Input
                     placeholder="例如: A01"
                     value={tableNumber}
                     onChange={(e) => setTableNumber(e.target.value)}
-                    className="mt-1"
+                    className="rounded-full"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">备注（选填）</label>
+                  <label className="text-sm font-medium mb-2 block">备注（选填）</label>
                   <Input
                     placeholder="特殊要求或备注"
                     value={orderNotes}
                     onChange={(e) => setOrderNotes(e.target.value)}
-                    className="mt-1"
+                    className="rounded-full"
                   />
                 </div>
-                <div className="pt-4 border-t space-y-2">
-                  <div className="flex justify-between">
+                <div className="pt-4 border-t space-y-3">
+                  <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">商品件数</span>
                     <span className="font-medium">{totalItems} 件</span>
                   </div>
-                  <div className="flex justify-between text-lg font-bold">
+                  <div className="flex justify-between text-xl font-semibold">
                     <span>总计</span>
-                    <span className="text-primary">¥{totalPrice.toFixed(2)}</span>
+                    <span>¥{totalPrice.toFixed(2)}</span>
                   </div>
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" size="lg" onClick={handleCheckout}>
+                <Button className="w-full rounded-full" size="lg" onClick={handleCheckout}>
                   提交订单
                 </Button>
               </CardFooter>
