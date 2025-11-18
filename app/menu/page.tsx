@@ -25,7 +25,6 @@ export default function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('全部')
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null)
   const [selectedOptions, setSelectedOptions] = useState<{ [optionId: string]: string[] }>({})
-  const [itemNotes, setItemNotes] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const { addItem, totalItems, totalPrice } = useCart()
 
@@ -36,21 +35,22 @@ export default function MenuPage() {
     return matchesSearch && matchesCategory && dish.available
   })
 
-  // 当选择菜品时，初始化选项和备注
+  // 当选择菜品时，初始化选项（只初始化必选项和有默认值的选项）
   useEffect(() => {
     if (selectedDish && dialogOpen) {
       const defaultOptions: { [optionId: string]: string[] } = {}
       selectedDish.options?.forEach(option => {
         const defaultChoices = option.choices.filter(c => c.default).map(c => c.id)
         if (defaultChoices.length > 0) {
+          // 有明确的默认值，使用默认值
           defaultOptions[option.id] = defaultChoices
         } else if (option.required && option.type === 'radio' && option.choices.length > 0) {
-          // 如果必选且没有默认值，选择第一个
+          // 必选的单选项，如果没有默认值，选择第一个
           defaultOptions[option.id] = [option.choices[0].id]
         }
+        // 可选项不设置默认值，让用户自己选择
       })
       setSelectedOptions(defaultOptions)
-      setItemNotes('') // 重置备注
     }
   }, [selectedDish, dialogOpen])
 
@@ -110,8 +110,7 @@ export default function MenuPage() {
     }
 
     const finalPrice = calculateFinalPrice()
-    const notes = itemNotes.trim() || undefined
-    addItem(selectedDish, 1, notes, selectedOptions, finalPrice)
+    addItem(selectedDish, 1, undefined, selectedOptions, finalPrice)
     setDialogOpen(false)
   }
 
@@ -313,19 +312,6 @@ export default function MenuPage() {
                               ))}
                             </div>
                           )}
-
-                          {/* 备注 */}
-                          <div className="bg-secondary/30 p-5 rounded-2xl">
-                            <label className="font-semibold text-base mb-3 block">
-                              备注 <span className="text-xs text-muted-foreground font-normal">（可选）</span>
-                            </label>
-                            <Input
-                              placeholder="例如：不要香菜、少油、多点辣椒..."
-                              value={itemNotes}
-                              onChange={(e) => setItemNotes(e.target.value)}
-                              className="rounded-full"
-                            />
-                          </div>
 
                           {/* 价格 */}
                           <div className="bg-primary/5 p-5 rounded-2xl border border-primary/10 text-center">

@@ -234,13 +234,6 @@ export default function AdminOrdersPage() {
                                                 {optionsSummary}
                                               </p>
                                             )}
-                                            {item.notes && (
-                                              <div className="mt-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5 inline-block">
-                                                <p className="text-xs text-amber-900">
-                                                  <span className="font-medium">备注：</span>{item.notes}
-                                                </p>
-                                              </div>
-                                            )}
                                             <p className="text-sm text-muted-foreground mt-1">
                                               ¥{itemPrice} × {item.quantity}
                                             </p>

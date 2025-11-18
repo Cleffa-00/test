@@ -135,14 +135,6 @@ export default function CartPage() {
                                 {optionsSummary}
                               </p>
                             )}
-                            {item.notes && (
-                              <div className="mt-2 flex items-start gap-2">
-                                <span className="text-xs text-muted-foreground shrink-0 mt-0.5">备注:</span>
-                                <p className="text-sm text-muted-foreground italic">
-                                  {item.notes}
-                                </p>
-                              </div>
-                            )}
                             <p className="font-semibold mt-2 text-lg">¥{itemPrice}</p>
                           </div>
                           <Button
