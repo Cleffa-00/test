@@ -264,19 +264,12 @@ export default function MenuPage() {
                                           <button
                                             key={choice.id}
                                             onClick={() => handleRadioChange(option.id, choice.id)}
-                                            className={`relative p-3 rounded-xl border-2 transition-all text-center ${
+                                            className={`p-3 rounded-xl border-2 transition-all text-center ${
                                               isSelected
                                                 ? 'bg-foreground text-background border-foreground shadow-lg scale-105'
                                                 : 'bg-white border-border hover:border-foreground/30 hover:shadow-md hover:scale-105'
                                             }`}
                                           >
-                                            {isSelected && (
-                                              <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-foreground rounded-full flex items-center justify-center">
-                                                <svg className="w-3 h-3 text-background" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                              </div>
-                                            )}
                                             <p className="font-medium text-sm">{choice.name}</p>
                                             {choice.priceAdjustment !== 0 && (
                                               <p className={`text-xs mt-1 ${isSelected ? 'text-background/70' : 'text-muted-foreground'}`}>
