@@ -128,12 +128,20 @@ export default function CartPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-start justify-between mb-2">
-                          <div>
+                          <div className="flex-1 mr-2">
                             <h3 className="font-semibold text-lg">{item.dish.name}</h3>
                             {optionsSummary && (
                               <p className="text-sm text-muted-foreground mt-1">
                                 {optionsSummary}
                               </p>
+                            )}
+                            {item.notes && (
+                              <div className="mt-2 flex items-start gap-2">
+                                <span className="text-xs text-muted-foreground shrink-0 mt-0.5">备注:</span>
+                                <p className="text-sm text-muted-foreground italic">
+                                  {item.notes}
+                                </p>
+                              </div>
                             )}
                             <p className="font-semibold mt-2 text-lg">¥{itemPrice}</p>
                           </div>
@@ -141,7 +149,7 @@ export default function CartPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => removeItem(item._id)}
-                            className="rounded-full"
+                            className="rounded-full shrink-0"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

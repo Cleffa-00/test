@@ -193,28 +193,66 @@ export default function AdminOrdersPage() {
                             <div>
                               <p className="text-sm text-muted-foreground mb-3">订单菜品</p>
                               <div className="border border-border/50 rounded-2xl divide-y divide-border/50 overflow-hidden">
-                                {order.items.map((item, index) => (
-                                  <div key={index} className="p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                      <div className="w-16 h-16 bg-muted rounded-xl overflow-hidden shrink-0">
-                                        <img
-                                          src={item.dish.image}
-                                          alt={item.dish.name}
-                                          className="w-full h-full object-cover"
-                                        />
-                                      </div>
-                                      <div>
-                                        <p className="font-semibold text-base">{item.dish.name}</p>
-                                        <p className="text-sm text-muted-foreground">
-                                          ¥{item.dish.price} × {item.quantity}
+                                {order.items.map((item, index) => {
+                                  // 生成选项摘要
+                                  const getOptionsSummary = () => {
+                                    if (!item.selectedOptions || !item.dish.options) return null
+                                    const summaryParts: string[] = []
+                                    Object.entries(item.selectedOptions).forEach(([optionId, choiceIds]) => {
+                                      const option = item.dish.options?.find(o => o.id === optionId)
+                                      if (option) {
+                                        const selectedChoices = choiceIds.map(choiceId => {
+                                          const choice = option.choices.find(c => c.id === choiceId)
+                                          return choice?.name
+                                        }).filter(Boolean)
+                                        if (selectedChoices.length > 0) {
+                                          summaryParts.push(selectedChoices.join('、'))
+                                        }
+                                      }
+                                    })
+                                    return summaryParts.length > 0 ? summaryParts.join(' | ') : null
+                                  }
+
+                                  const optionsSummary = getOptionsSummary()
+                                  const itemPrice = item.finalPrice || item.dish.price
+
+                                  return (
+                                    <div key={index} className="p-4 hover:bg-secondary/30 transition-colors">
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex items-start gap-4 flex-1">
+                                          <div className="w-16 h-16 bg-muted rounded-xl overflow-hidden shrink-0">
+                                            <img
+                                              src={item.dish.image}
+                                              alt={item.dish.name}
+                                              className="w-full h-full object-cover"
+                                            />
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className="font-semibold text-base">{item.dish.name}</p>
+                                            {optionsSummary && (
+                                              <p className="text-xs text-muted-foreground mt-1">
+                                                {optionsSummary}
+                                              </p>
+                                            )}
+                                            {item.notes && (
+                                              <div className="mt-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5 inline-block">
+                                                <p className="text-xs text-amber-900">
+                                                  <span className="font-medium">备注：</span>{item.notes}
+                                                </p>
+                                              </div>
+                                            )}
+                                            <p className="text-sm text-muted-foreground mt-1">
+                                              ¥{itemPrice} × {item.quantity}
+                                            </p>
+                                          </div>
+                                        </div>
+                                        <p className="font-semibold text-lg shrink-0 ml-4">
+                                          ¥{(itemPrice * item.quantity).toFixed(2)}
                                         </p>
                                       </div>
                                     </div>
-                                    <p className="font-semibold text-lg">
-                                      ¥{(item.dish.price * item.quantity).toFixed(2)}
-                                    </p>
-                                  </div>
-                                ))}
+                                  )
+                                })}
                               </div>
                             </div>
 

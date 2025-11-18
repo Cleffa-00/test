@@ -25,6 +25,7 @@ export default function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('全部')
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null)
   const [selectedOptions, setSelectedOptions] = useState<{ [optionId: string]: string[] }>({})
+  const [itemNotes, setItemNotes] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const { addItem, totalItems, totalPrice } = useCart()
 
@@ -35,7 +36,7 @@ export default function MenuPage() {
     return matchesSearch && matchesCategory && dish.available
   })
 
-  // 当选择菜品时，初始化选项
+  // 当选择菜品时，初始化选项和备注
   useEffect(() => {
     if (selectedDish && dialogOpen) {
       const defaultOptions: { [optionId: string]: string[] } = {}
@@ -49,6 +50,7 @@ export default function MenuPage() {
         }
       })
       setSelectedOptions(defaultOptions)
+      setItemNotes('') // 重置备注
     }
   }, [selectedDish, dialogOpen])
 
@@ -108,7 +110,8 @@ export default function MenuPage() {
     }
 
     const finalPrice = calculateFinalPrice()
-    addItem(selectedDish, 1, undefined, selectedOptions, finalPrice)
+    const notes = itemNotes.trim() || undefined
+    addItem(selectedDish, 1, notes, selectedOptions, finalPrice)
     setDialogOpen(false)
   }
 
@@ -310,6 +313,19 @@ export default function MenuPage() {
                               ))}
                             </div>
                           )}
+
+                          {/* 备注 */}
+                          <div className="bg-secondary/30 p-5 rounded-2xl">
+                            <label className="font-semibold text-base mb-3 block">
+                              备注 <span className="text-xs text-muted-foreground font-normal">（可选）</span>
+                            </label>
+                            <Input
+                              placeholder="例如：不要香菜、少油、多点辣椒..."
+                              value={itemNotes}
+                              onChange={(e) => setItemNotes(e.target.value)}
+                              className="rounded-full"
+                            />
+                          </div>
 
                           {/* 价格 */}
                           <div className="bg-primary/5 p-5 rounded-2xl border border-primary/10 text-center">
