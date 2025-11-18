@@ -11,6 +11,31 @@ export const mockDishes: Dish[] = [
     image: 'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=600&fit=crop',
     available: true,
     preparationTime: 15,
+    options: [
+      {
+        id: 'size',
+        type: 'radio',
+        label: '份量',
+        required: true,
+        choices: [
+          { id: 'small', name: '小份', priceAdjustment: -8, default: false },
+          { id: 'medium', name: '中份', priceAdjustment: 0, default: true },
+          { id: 'large', name: '大份', priceAdjustment: 10, default: false },
+        ],
+      },
+      {
+        id: 'spicy',
+        type: 'radio',
+        label: '辣度',
+        required: true,
+        choices: [
+          { id: 'none', name: '不辣', priceAdjustment: 0, default: false },
+          { id: 'mild', name: '微辣', priceAdjustment: 0, default: true },
+          { id: 'medium', name: '中辣', priceAdjustment: 0, default: false },
+          { id: 'hot', name: '特辣', priceAdjustment: 0, default: false },
+        ],
+      },
+    ],
   },
   {
     id: '2',
@@ -21,6 +46,20 @@ export const mockDishes: Dish[] = [
     image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=800&h=600&fit=crop',
     available: true,
     preparationTime: 10,
+    options: [
+      {
+        id: 'spicy',
+        type: 'radio',
+        label: '辣度',
+        required: true,
+        choices: [
+          { id: 'none', name: '不辣', priceAdjustment: 0, default: false },
+          { id: 'mild', name: '微辣', priceAdjustment: 0, default: false },
+          { id: 'medium', name: '中辣', priceAdjustment: 0, default: true },
+          { id: 'hot', name: '特辣', priceAdjustment: 0, default: false },
+        ],
+      },
+    ],
   },
   {
     id: '3',
@@ -61,6 +100,42 @@ export const mockDishes: Dish[] = [
     image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&h=600&fit=crop',
     available: true,
     preparationTime: 12,
+    options: [
+      {
+        id: 'size',
+        type: 'radio',
+        label: '份量',
+        required: true,
+        choices: [
+          { id: 'small', name: '小份', priceAdjustment: -5, default: false },
+          { id: 'medium', name: '中份', priceAdjustment: 0, default: true },
+          { id: 'large', name: '大份', priceAdjustment: 8, default: false },
+        ],
+      },
+      {
+        id: 'spicy',
+        type: 'radio',
+        label: '辣度',
+        required: false,
+        choices: [
+          { id: 'none', name: '不辣', priceAdjustment: 0, default: true },
+          { id: 'mild', name: '微辣', priceAdjustment: 0, default: false },
+          { id: 'medium', name: '中辣', priceAdjustment: 0, default: false },
+        ],
+      },
+      {
+        id: 'addons',
+        type: 'checkbox',
+        label: '加料',
+        required: false,
+        choices: [
+          { id: 'egg', name: '加鸡蛋', priceAdjustment: 2, default: false },
+          { id: 'ham', name: '加火腿', priceAdjustment: 3, default: false },
+          { id: 'shrimp', name: '加虾仁', priceAdjustment: 8, default: false },
+          { id: 'veg', name: '加时蔬', priceAdjustment: 1, default: false },
+        ],
+      },
+    ],
   },
   {
     id: '7',
@@ -71,6 +146,30 @@ export const mockDishes: Dish[] = [
     image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&h=600&fit=crop',
     available: true,
     preparationTime: 8,
+    options: [
+      {
+        id: 'size',
+        type: 'radio',
+        label: '份量',
+        required: true,
+        choices: [
+          { id: 'small', name: '小份', priceAdjustment: -3, default: false },
+          { id: 'medium', name: '中份', priceAdjustment: 0, default: true },
+          { id: 'large', name: '大份', priceAdjustment: 5, default: false },
+        ],
+      },
+      {
+        id: 'addons',
+        type: 'checkbox',
+        label: '加料',
+        required: false,
+        choices: [
+          { id: 'egg', name: '加鸡蛋', priceAdjustment: 2, default: false },
+          { id: 'ham', name: '加火腿', priceAdjustment: 3, default: false },
+          { id: 'veg', name: '加青菜', priceAdjustment: 1, default: false },
+        ],
+      },
+    ],
   },
   {
     id: '8',

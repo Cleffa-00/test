@@ -3,12 +3,23 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
 import { CartItem, Dish } from '@/lib/types'
 
+// 扩展的 CartItem，包含唯一标识
+interface CartItemWithId extends CartItem {
+  _id: string  // 内部使用的唯一标识
+}
+
 interface CartContextType {
-  items: CartItem[]
-  addItem: (dish: Dish, quantity?: number, notes?: string) => void
-  removeItem: (dishId: string) => void
-  updateQuantity: (dishId: string, quantity: number) => void
-  updateNotes: (dishId: string, notes: string) => void
+  items: CartItemWithId[]
+  addItem: (
+    dish: Dish,
+    quantity?: number,
+    notes?: string,
+    selectedOptions?: { [optionId: string]: string[] },
+    finalPrice?: number
+  ) => void
+  removeItem: (itemId: string) => void
+  updateQuantity: (itemId: string, quantity: number) => void
+  updateNotes: (itemId: string, notes: string) => void
   clearCart: () => void
   totalItems: number
   totalPrice: number
@@ -16,43 +27,97 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
+// 生成购物车项的唯一标识
+function generateCartItemId(
+  dishId: string,
+  selectedOptions?: { [optionId: string]: string[] }
+): string {
+  if (!selectedOptions || Object.keys(selectedOptions).length === 0) {
+    return dishId
+  }
+  // 将选项排序后转成字符串，确保相同选项组合生成相同 ID
+  const optionsStr = Object.keys(selectedOptions)
+    .sort()
+    .map(key => `${key}:${selectedOptions[key].sort().join(',')}`)
+    .join('|')
+  return `${dishId}__${optionsStr}`
+}
 
-  const addItem = useCallback((dish: Dish, quantity = 1, notes?: string) => {
+// 比较两个选项对象是否相同
+function areOptionsEqual(
+  opt1?: { [key: string]: string[] },
+  opt2?: { [key: string]: string[] }
+): boolean {
+  if (!opt1 && !opt2) return true
+  if (!opt1 || !opt2) return false
+
+  const keys1 = Object.keys(opt1).sort()
+  const keys2 = Object.keys(opt2).sort()
+
+  if (keys1.length !== keys2.length) return false
+
+  return keys1.every(key => {
+    const arr1 = opt1[key].sort()
+    const arr2 = opt2[key]?.sort()
+    return arr1.length === arr2?.length && arr1.every((val, i) => val === arr2[i])
+  })
+}
+
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [items, setItems] = useState<CartItemWithId[]>([])
+
+  const addItem = useCallback((
+    dish: Dish,
+    quantity = 1,
+    notes?: string,
+    selectedOptions?: { [optionId: string]: string[] },
+    finalPrice?: number
+  ) => {
     setItems((prev) => {
-      const existingItem = prev.find((item) => item.dish.id === dish.id)
+      const itemId = generateCartItemId(dish.id, selectedOptions)
+      const existingItem = prev.find((item) => item._id === itemId)
+
       if (existingItem) {
+        // 相同菜品和相同选项，增加数量
         return prev.map((item) =>
-          item.dish.id === dish.id
+          item._id === itemId
             ? { ...item, quantity: item.quantity + quantity }
             : item
         )
       }
-      return [...prev, { dish, quantity, notes }]
+
+      // 新的购物车项
+      return [...prev, {
+        _id: itemId,
+        dish,
+        quantity,
+        notes,
+        selectedOptions,
+        finalPrice: finalPrice || dish.price
+      }]
     })
   }, [])
 
-  const removeItem = useCallback((dishId: string) => {
-    setItems((prev) => prev.filter((item) => item.dish.id !== dishId))
+  const removeItem = useCallback((itemId: string) => {
+    setItems((prev) => prev.filter((item) => item._id !== itemId))
   }, [])
 
-  const updateQuantity = useCallback((dishId: string, quantity: number) => {
+  const updateQuantity = useCallback((itemId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeItem(dishId)
+      removeItem(itemId)
       return
     }
     setItems((prev) =>
       prev.map((item) =>
-        item.dish.id === dishId ? { ...item, quantity } : item
+        item._id === itemId ? { ...item, quantity } : item
       )
     )
   }, [removeItem])
 
-  const updateNotes = useCallback((dishId: string, notes: string) => {
+  const updateNotes = useCallback((itemId: string, notes: string) => {
     setItems((prev) =>
       prev.map((item) =>
-        item.dish.id === dishId ? { ...item, notes } : item
+        item._id === itemId ? { ...item, notes } : item
       )
     )
   }, [])
@@ -63,7 +128,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
   const totalPrice = items.reduce(
-    (sum, item) => sum + item.dish.price * item.quantity,
+    (sum, item) => sum + (item.finalPrice || item.dish.price) * item.quantity,
     0
   )
 

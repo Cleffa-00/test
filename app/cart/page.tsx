@@ -16,6 +16,27 @@ export default function CartPage() {
   const [tableNumber, setTableNumber] = useState('')
   const [orderNotes, setOrderNotes] = useState('')
 
+  // 生成选项摘要文本
+  const getOptionsSummary = (item: typeof items[0]) => {
+    if (!item.selectedOptions || !item.dish.options) return null
+
+    const summaryParts: string[] = []
+    Object.entries(item.selectedOptions).forEach(([optionId, choiceIds]) => {
+      const option = item.dish.options?.find(o => o.id === optionId)
+      if (option) {
+        const selectedChoices = choiceIds.map(choiceId => {
+          const choice = option.choices.find(c => c.id === choiceId)
+          return choice?.name
+        }).filter(Boolean)
+        if (selectedChoices.length > 0) {
+          summaryParts.push(selectedChoices.join('、'))
+        }
+      }
+    })
+
+    return summaryParts.length > 0 ? summaryParts.join(' | ') : null
+  }
+
   const handleCheckout = () => {
     if (!customerName.trim()) {
       alert('请输入您的姓名')
@@ -90,60 +111,69 @@ export default function CartPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {items.map((item) => (
-              <Card key={item.dish.id} className="rounded-3xl soft-shadow border-border/50">
-                <CardContent className="p-6">
-                  <div className="flex gap-4">
-                    <div className="w-24 h-24 bg-muted rounded-2xl overflow-hidden flex-shrink-0">
-                      <img
-                        src={item.dish.image}
-                        alt={item.dish.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="font-semibold">{item.dish.name}</h3>
-                          <p className="text-sm text-muted-foreground">{item.dish.description}</p>
-                          <p className="font-semibold mt-1">¥{item.dish.price}</p>
+            {items.map((item) => {
+              const optionsSummary = getOptionsSummary(item)
+              const itemPrice = item.finalPrice || item.dish.price
+
+              return (
+                <Card key={item._id} className="rounded-3xl soft-shadow border-border/50">
+                  <CardContent className="p-6">
+                    <div className="flex gap-4">
+                      <div className="w-24 h-24 bg-muted rounded-2xl overflow-hidden flex-shrink-0">
+                        <img
+                          src={item.dish.image}
+                          alt={item.dish.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h3 className="font-semibold text-lg">{item.dish.name}</h3>
+                            {optionsSummary && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {optionsSummary}
+                              </p>
+                            )}
+                            <p className="font-semibold mt-2 text-lg">¥{itemPrice}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeItem(item._id)}
+                            className="rounded-full"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeItem(item.dish.id)}
-                          className="rounded-full"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex items-center gap-3 mt-3">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => updateQuantity(item.dish.id, item.quantity - 1)}
-                          className="rounded-full"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="w-12 text-center font-medium">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => updateQuantity(item.dish.id, item.quantity + 1)}
-                          className="rounded-full"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                        <span className="ml-auto font-semibold">
-                          ¥{(item.dish.price * item.quantity).toFixed(2)}
-                        </span>
+                        <div className="flex items-center gap-3 mt-4">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                            className="rounded-full h-9 w-9"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="w-12 text-center font-semibold">{item.quantity}</span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                            className="rounded-full h-9 w-9"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                          <span className="ml-auto font-semibold text-lg">
+                            ¥{(itemPrice * item.quantity).toFixed(2)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
 
           {/* Checkout Form */}
