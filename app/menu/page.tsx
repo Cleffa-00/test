@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Plus, ShoppingCart, Sparkles } from 'lucide-react'
+import { Search, Plus, ShoppingCart, Sparkles, Clock, Tag } from 'lucide-react'
 import { mockDishes } from '@/lib/mock-data'
 import { CATEGORIES, Dish } from '@/lib/types'
 import { useCart } from '@/app/contexts/cart-context'
@@ -13,7 +13,6 @@ import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -112,40 +111,55 @@ export default function MenuPage() {
                           详情
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="rounded-3xl">
-                        <DialogHeader>
-                          <DialogTitle>{selectedDish?.name}</DialogTitle>
-                          <DialogDescription>{selectedDish?.description}</DialogDescription>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader className="pr-8">
+                          <DialogTitle className="text-3xl">{selectedDish?.name}</DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="aspect-video bg-muted rounded-2xl overflow-hidden">
+
+                        <div className="space-y-6">
+                          {/* 图片 */}
+                          <div className="aspect-[16/10] bg-muted rounded-3xl overflow-hidden">
                             <img
                               src={selectedDish?.image || ''}
                               alt={selectedDish?.name || ''}
                               className="w-full h-full object-cover"
                             />
                           </div>
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm text-muted-foreground">分类</p>
-                              <p className="font-medium">{selectedDish?.category}</p>
+
+                          {/* 描述 */}
+                          <div className="space-y-2">
+                            <p className="text-muted-foreground leading-relaxed text-lg">
+                              {selectedDish?.description}
+                            </p>
+                          </div>
+
+                          {/* 信息卡片 */}
+                          <div className="grid grid-cols-3 gap-4">
+                            <div className="bg-secondary/50 p-4 rounded-2xl text-center">
+                              <Tag className="h-5 w-5 mx-auto mb-2 text-muted-foreground" strokeWidth={1.5} />
+                              <p className="text-xs text-muted-foreground mb-1">分类</p>
+                              <p className="font-semibold">{selectedDish?.category}</p>
                             </div>
-                            <div>
-                              <p className="text-sm text-muted-foreground">准备时间</p>
-                              <p className="font-medium">{selectedDish?.preparationTime || 0} 分钟</p>
+                            <div className="bg-secondary/50 p-4 rounded-2xl text-center">
+                              <Clock className="h-5 w-5 mx-auto mb-2 text-muted-foreground" strokeWidth={1.5} />
+                              <p className="text-xs text-muted-foreground mb-1">准备时间</p>
+                              <p className="font-semibold">{selectedDish?.preparationTime || 0} 分钟</p>
                             </div>
-                            <div>
-                              <p className="text-sm text-muted-foreground">价格</p>
-                              <p className="font-semibold text-xl">¥{selectedDish?.price}</p>
+                            <div className="bg-primary/5 p-4 rounded-2xl text-center border border-primary/10">
+                              <p className="text-xs text-muted-foreground mb-1">价格</p>
+                              <p className="font-semibold text-2xl">¥{selectedDish?.price}</p>
                             </div>
                           </div>
+
+                          {/* 按钮 */}
                           <Button
-                            className="w-full rounded-full"
+                            className="w-full rounded-full h-12 text-base"
+                            size="lg"
                             onClick={() => {
                               if (selectedDish) handleAddToCart(selectedDish)
                             }}
                           >
-                            <Plus className="h-4 w-4 mr-2" />
+                            <Plus className="h-5 w-5 mr-2" />
                             加入购物车
                           </Button>
                         </div>
