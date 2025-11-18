@@ -267,7 +267,7 @@ export default function MenuPage() {
                                             className={`relative p-3 rounded-xl border-2 transition-all text-center ${
                                               isSelected
                                                 ? 'bg-foreground text-background border-foreground shadow-lg scale-105'
-                                                : 'bg-white border-border hover:border-foreground/30 hover:shadow-sm'
+                                                : 'bg-white border-border hover:border-foreground/30 hover:shadow-md hover:scale-105'
                                             }`}
                                           >
                                             {isSelected && (
@@ -298,8 +298,8 @@ export default function MenuPage() {
                                             key={choice.id}
                                             className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer ${
                                               isChecked
-                                                ? 'bg-foreground/5 border-foreground shadow-sm'
-                                                : 'bg-white border-border hover:border-foreground/30 hover:bg-secondary/20'
+                                                ? 'bg-muted border-foreground shadow-md'
+                                                : 'bg-white border-border hover:border-foreground/30 hover:bg-secondary/20 hover:scale-[1.02] hover:shadow-sm'
                                             }`}
                                           >
                                             <Checkbox
