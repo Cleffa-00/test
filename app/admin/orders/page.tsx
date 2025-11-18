@@ -148,48 +148,55 @@ export default function AdminOrdersPage() {
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>订单详情 - {order.id}</DialogTitle>
-                            <DialogDescription>
-                              下单时间: {order.createdAt.toLocaleString('zh-CN')}
-                            </DialogDescription>
+                          <DialogHeader className="pr-8">
+                            <DialogTitle className="text-3xl">订单 {order.id}</DialogTitle>
+                            <p className="text-sm text-muted-foreground mt-2">
+                              下单时间: {order.createdAt.toLocaleString('zh-CN', {
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
                           </DialogHeader>
-                          <div className="space-y-4">
+                          <div className="space-y-6">
+                            {/* 信息卡片 */}
                             <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <p className="text-sm text-muted-foreground">顾客姓名</p>
-                                <p className="font-medium">{order.customerName}</p>
+                              <div className="bg-secondary/50 p-4 rounded-2xl">
+                                <p className="text-xs text-muted-foreground mb-1">顾客姓名</p>
+                                <p className="font-semibold text-lg">{order.customerName}</p>
                               </div>
-                              <div>
-                                <p className="text-sm text-muted-foreground">桌号</p>
-                                <p className="font-medium">{order.tableNumber || '-'}</p>
+                              <div className="bg-secondary/50 p-4 rounded-2xl">
+                                <p className="text-xs text-muted-foreground mb-1">桌号</p>
+                                <p className="font-semibold text-lg">{order.tableNumber || '外卖'}</p>
                               </div>
-                              <div>
-                                <p className="text-sm text-muted-foreground">订单状态</p>
-                                <Badge variant={statusConfig[order.status].variant}>
+                              <div className="bg-secondary/50 p-4 rounded-2xl">
+                                <p className="text-xs text-muted-foreground mb-1">订单状态</p>
+                                <Badge variant={statusConfig[order.status].variant} className="rounded-full mt-1">
                                   {statusConfig[order.status].label}
                                 </Badge>
                               </div>
-                              <div>
-                                <p className="text-sm text-muted-foreground">总金额</p>
-                                <p className="font-medium text-lg">¥{order.total.toFixed(2)}</p>
+                              <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
+                                <p className="text-xs text-muted-foreground mb-1">总金额</p>
+                                <p className="font-semibold text-2xl">¥{order.total.toFixed(2)}</p>
                               </div>
                             </div>
 
                             {order.notes && (
-                              <div>
-                                <p className="text-sm text-muted-foreground">备注</p>
+                              <div className="bg-secondary/30 p-4 rounded-2xl">
+                                <p className="text-xs text-muted-foreground mb-2">备注</p>
                                 <p className="font-medium">{order.notes}</p>
                               </div>
                             )}
 
+                            {/* 订单菜品列表 */}
                             <div>
-                              <p className="text-sm text-muted-foreground mb-2">订单详情</p>
-                              <div className="border rounded-lg divide-y">
+                              <p className="text-sm text-muted-foreground mb-3">订单菜品</p>
+                              <div className="border border-border/50 rounded-2xl divide-y divide-border/50 overflow-hidden">
                                 {order.items.map((item, index) => (
-                                  <div key={index} className="p-3 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-12 h-12 bg-muted rounded overflow-hidden">
+                                  <div key={index} className="p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                      <div className="w-16 h-16 bg-muted rounded-xl overflow-hidden shrink-0">
                                         <img
                                           src={item.dish.image}
                                           alt={item.dish.name}
@@ -197,13 +204,13 @@ export default function AdminOrdersPage() {
                                         />
                                       </div>
                                       <div>
-                                        <p className="font-medium">{item.dish.name}</p>
+                                        <p className="font-semibold text-base">{item.dish.name}</p>
                                         <p className="text-sm text-muted-foreground">
                                           ¥{item.dish.price} × {item.quantity}
                                         </p>
                                       </div>
                                     </div>
-                                    <p className="font-semibold">
+                                    <p className="font-semibold text-lg">
                                       ¥{(item.dish.price * item.quantity).toFixed(2)}
                                     </p>
                                   </div>
@@ -211,11 +218,12 @@ export default function AdminOrdersPage() {
                               </div>
                             </div>
 
-                            <div className="flex gap-2">
-                              <Button variant="outline" className="flex-1">
+                            {/* 操作按钮 */}
+                            <div className="flex gap-3 pt-2">
+                              <Button variant="outline" className="flex-1 rounded-full h-12">
                                 标记为准备中
                               </Button>
-                              <Button className="flex-1">
+                              <Button className="flex-1 rounded-full h-12">
                                 标记为已完成
                               </Button>
                             </div>
